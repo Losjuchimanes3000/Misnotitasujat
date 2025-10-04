@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiOrganizador Escolar</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f2f5f9;
+      color: #333;
+    }
+
+    header {
+      background: #2a6ff0;
+      color: white;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: #1e57bd;
+    }
+
+    nav button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: white;
+      padding: 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    nav button:hover, nav button.active {
+      background: #244fb8;
+    }
+
+    main {
+      padding: 1.5rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #244fb8;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    input, textarea {
+      flex: 1;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+
+    button.add {
+      background: #2a6ff0;
+      border: none;
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: white;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li span {
+      flex: 1;
+      margin-right: 1rem;
+    }
+
+    li.completed span {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    li button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #e33;
+      font-size: 1.2rem;
+    }
+
+    textarea {
+      resize: none;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <header>📚 NotitasBloc</header>
+  <nav>
+    <button class="active" onclick="showSection('tareas')">Tareas</button>
+    <button onclick="showSection('recordatorios')">Recordatorios</button>
+    <button onclick="showSection('apuntes')">Apuntes</button>
+  </nav>
+
+  <main>
+    <!-- Sección de TAREAS -->
+    <section id="tareas">
+      <h2>Mis Tareas</h2>
+      <div class="input-group">
+        <input type="text" id="nuevaTarea" placeholder="Escribe una tarea...">
+        <button class="add" onclick="agregarTarea()">Agregar</button>
+      </div>
+      <ul id="listaTareas"></ul>
+    </section>
+
+    <!-- Sección de RECORDATORIOS -->
+    <section id="recordatorios" style="display:none;">
+      <h2>Recordatorios</h2>
+      <div class="input-group">
+        <input type="text" id="nuevoRecordatorio" placeholder="Nuevo recordatorio...">
+        <button class="add" onclick="agregarRecordatorio()">Agregar</button>
+      </div>
+      <ul id="listaRecordatorios"></ul>
+    </section>
+
+    <!-- Sección de APUNTES -->
+    <section id="apuntes" style="display:none;">
+      <h2>Mis Apuntes</h2>
+      <textarea id="textoApuntes" placeholder="Escribe tus apuntes aquí..."></textarea>
+      <button class="add" onclick="guardarApuntes()">Guardar Apuntes</button>
+    </section>
+  </main>
+
+  <script>
+    // ======== CAMBIO DE SECCIONES ========
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // ======== TAREAS ========
+    let tareas = JSON.parse(localStorage.getItem('tareas') || '[]');
+    const listaTareas = document.getElementById('listaTareas');
+    function renderTareas() {
+      listaTareas.innerHTML = '';
+      tareas.forEach((t, i) => {
+        const li = document.createElement('li');
+        li.className = t.completada ? 'completed' : '';
+        li.innerHTML = `
+          <span onclick="toggleTarea(${i})">${t.texto}</span>
+          <button onclick="eliminarTarea(${i})">🗑️</button>`;
+        listaTareas.appendChild(li);
+      });
+      localStorage.setItem('tareas', JSON.stringify(tareas));
+    }
+
+    function agregarTarea() {
+      const texto = document.getElementById('nuevaTarea').value.trim();
+      if (texto) {
+        tareas.push({ texto, completada: false });
+        document.getElementById('nuevaTarea').value = '';
+        renderTareas();
+      }
+    }
+
+    function toggleTarea(i) {
+      tareas[i].completada = !tareas[i].completada;
+      renderTareas();
+    }
+
+    function eliminarTarea(i) {
+      tareas.splice(i, 1);
+      renderTareas();
+    }
+
+    // ======== RECORDATORIOS ========
+    let recordatorios = JSON.parse(localStorage.getItem('recordatorios') || '[]');
+    const listaRecordatorios = document.getElementById('listaRecordatorios');
+    function renderRecordatorios() {
+      listaRecordatorios.innerHTML = '';
+      recordatorios.forEach((r, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${r}</span>
+          <button onclick="eliminarRecordatorio(${i})">🗑️</button>`;
+        listaRecordatorios.appendChild(li);
+      });
+      localStorage.setItem('recordatorios', JSON.stringify(recordatorios));
+    }
+
+    function agregarRecordatorio() {
+      const texto = document.getElementById('nuevoRecordatorio').value.trim();
+      if (texto) {
+        recordatorios.push(texto);
+        document.getElementById('nuevoRecordatorio').value = '';
+        renderRecordatorios();
+      }
+    }
+
+    function eliminarRecordatorio(i) {
+      recordatorios.splice(i, 1);
+      renderRecordatorios();
+    }
+
+    // ======== APUNTES ========
+    const textoApuntes = document.getElementById('textoApuntes');
+    textoApuntes.value = localStorage.getItem('apuntes') || '';
+    function guardarApuntes() {
+      localStorage.setItem('apuntes', textoApuntes.value);
+      alert('📒 Apuntes guardados correctamente');
+    }
+
+    // Render inicial
+    renderTareas();
+    renderRecordatorios();
+  </script>
+</body>
+</html>
+
